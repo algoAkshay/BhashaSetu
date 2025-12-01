@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Audio outputs
+audio/*.mp3
+
+# Temp files
+temp/
+*.wav
+
+# OS
+.DS_Store
+
