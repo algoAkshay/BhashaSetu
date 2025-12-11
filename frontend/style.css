@@ -1,0 +1,26 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f3;
+}
+
+.app {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+
+.controls {
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 10px 16px;
+  margin-right: 10px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 8px;
+}

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Government Voice Agent</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="app">
+  <h1>🎤 Government Voice Agent</h1>
+
+  <div class="controls">
+    <button id="start">Start</button>
+    <button id="stop" disabled>Stop</button>
+    <button id="submit">Submit</button>
+  </div>
+
+  <div class="card">
+    <h3>User</h3>
+    <audio id="userAudio" controls></audio>
+    <p id="userText"></p>
+  </div>
+
+  <div class="card">
+    <h3>Assistant</h3>
+    <audio id="aiAudio" controls></audio>
+    <p id="aiText"></p>
+  </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
