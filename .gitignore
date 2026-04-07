@@ -14,4 +14,4 @@ temp/
 
 # OS
 .DS_Store
-
+.env

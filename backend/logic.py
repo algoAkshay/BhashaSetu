@@ -1,7 +1,8 @@
 import re
-import csv
+# import csv
 import os
-
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, text
 # -------------------------------------------------
 # SESSION STATE (SINGLE SOURCE OF TRUTH)
 # -------------------------------------------------
@@ -15,6 +16,9 @@ SESSION = {
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SCHEME_FILE = os.path.join(BASE_DIR, "database", "schemes.csv")
+
+# Load environment variables from project root .env before DB init.
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
 # -------------------------------------------------
@@ -104,25 +108,21 @@ def get_missing_fields():
 # -------------------------------------------------
 # SCHEME MATCHING
 # -------------------------------------------------
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set. Add it to your .env file.")
+
+engine = create_engine(DATABASE_URL)
+
 def find_eligible_schemes():
-    results = []
-
-    with open(SCHEME_FILE, encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-
-        for row in reader:
-            if not (int(row["min_age"]) <= SESSION["age"] <= int(row["max_age"])):
-                continue
-
-            if row["gender"] != "Any" and row["gender"] != SESSION["gender"]:
-                continue
-
-            if SESSION["income"] > int(row["max_income"]):
-                continue
-
-            results.append(row["scheme_name"])
-
-    return results
+    with engine.connect() as conn:
+        result = conn.execute(text("""
+            SELECT scheme_name FROM schemes
+            WHERE min_age <= :age AND max_age >= :age
+                AND (gender = 'Any' OR gender = :gender)
+                AND max_income >= :income
+        """), {"age": SESSION["age"], "gender": SESSION["gender"], "income": SESSION["income"]})
+        return [row[0] for row in result]
 
 
 # -------------------------------------------------
