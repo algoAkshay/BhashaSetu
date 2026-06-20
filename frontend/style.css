@@ -1,10 +1,11 @@
 body {
   font-family: Arial, sans-serif;
   background: #eef2f3;
+  color: #17212b;
 }
 
 .app {
-  max-width: 600px;
+  max-width: 900px;
   margin: auto;
   padding: 20px;
 }
@@ -23,4 +24,55 @@ button {
   padding: 15px;
   margin-top: 15px;
   border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(20, 30, 40, 0.08);
+}
+
+.assistant-summary {
+  margin: 12px 0;
+  line-height: 1.5;
+}
+
+.scheme-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 15px;
+}
+
+.scheme-table th,
+.scheme-table td {
+  border: 1px solid #d8e0e6;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.scheme-table th {
+  background: #f3f7f9;
+  font-weight: 700;
+}
+
+.scheme-table td:first-child,
+.scheme-table th:first-child {
+  width: 64px;
+  text-align: center;
+}
+
+.scheme-table tr:nth-child(even) {
+  background: #fafcfd;
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 12px;
+  }
+
+  .scheme-table {
+    font-size: 14px;
+  }
+
+  .scheme-table th,
+  .scheme-table td {
+    padding: 8px;
+  }
 }

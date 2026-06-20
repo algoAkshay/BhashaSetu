@@ -76,11 +76,10 @@ hindi-gov-voice-agent/
 ├── frontend/
 │   ├── index.html       # UI layout
 │   ├── script.js        # Recording, submit, audio playback
-│   ├── app.js           # UI event wiring
 │   └── style.css        # UI styling
 │
 ├── database/
-│   └── schemes.csv      # Government schemes dataset
+│   └── schemes.csv      # CSV government schemes dataset
 │
 ├── audio/               # Generated TTS audio files
 ├── temp/                # Temporary Whisper audio files
@@ -118,6 +117,8 @@ pip install -r requirements.txt
 ```bash
 uvicorn backend.server:app --reload
 ```
+
+The eligibility engine reads schemes directly from `database/schemes.csv`; no external database or `.env` file is required.
 
 ### 5️⃣ Open UI
 
