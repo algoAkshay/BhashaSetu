@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "python",
+  "packages": {
+    "python": "3.12"
+  },
+  "deploy": {
+    "aptPackages": ["ffmpeg"],
+    "variables": {
+      "FFMPEG_BINARY": "/usr/bin/ffmpeg",
+      "HF_HOME": "/tmp/bhashasetu-huggingface",
+      "PYTHONUNBUFFERED": "1"
+    },
+    "startCommand": "sh -c 'exec python -m uvicorn backend.server:app --host 0.0.0.0 --port \"$PORT\" --workers 1'"
+  }
+}

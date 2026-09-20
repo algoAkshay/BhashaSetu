@@ -134,3 +134,29 @@ python -m pytest tests/test_postgresql.py tests/test_redis_integration.py -q
 Ordinary tests use actual migrations on isolated SQLite databases, Redis command mocks/injected memory, and mocked Gemini/ASR/TTS. TEST_DATABASE_URL and TEST_REDIS_URL gate live integrations. Tests own temporary schemas/prefixes and never flush Redis.
 
 The user reports prior live verification in their working environment. This run lacks integration URLs, so new migration/profile changes are verified offline only. Sessions remain temporary and unauthenticated; overlapping whole turns are not serialized. No perfect language understanding, qualification hierarchy, legal correctness, exhaustive scheme coverage or production reliability is claimed. Admin, scraping, RAG, vectors and distributed locks remain out of scope.
+
+## Railway Deployment
+
+Deployment configuration is prepared, but no live Railway deployment is claimed.
+Use **Railpack**, Railway's current native builder and successor to Nixpacks.
+`railpack.json` selects Python 3.12, installs runtime FFmpeg, sets a writable
+Linux model cache and starts the existing app with one worker. Docker is unnecessary.
+
+1. Create a Railway project and add PostgreSQL and Redis services.
+2. Add one app service from the existing Bhasha Setu GitHub repository, with the current source and `railpack.json` committed. Set its root to the directory containing `requirements.txt` and `backend/`.
+3. Set `DATABASE_URL` and `REDIS_URL` using Railway references to those services. Set `GEMINI_API_KEY`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET` and model-access `HF_TOKEN` privately. Enable `ADMIN_COOKIE_SECURE=true`, keep `SESSION_BACKEND=redis`, and retain the existing ASR defaults. Do not upload `.env`.
+4. Set the Railway pre-deploy command to `python -m alembic upgrade head`. Never auto-seed on startup. Initialize a **new empty** catalogue separately with `python -m backend.db.seed` in the deployed environment; do not re-import an existing edited database.
+5. Deploy using Railpack and one replica. The configured start command runs `python -m uvicorn backend.server:app --host 0.0.0.0 --port "$PORT" --workers 1`; Railway supplies PORT. Logs go to stdout/stderr.
+6. Generate an HTTPS domain and set the Railway healthcheck path to `/health`. Verify HTTP 200 with `{"status":"ok"}`; this checks process liveness only.
+7. Test text input, a follow-up question, a final result and audio/fallback. Then test one Hindi voice recording and a second recording to check model reuse. Finally test admin login/logout.
+
+ASR loads on the first voice request, not startup. `HF_HOME` is set to
+`/tmp/bhashasetu-huggingface`; the ephemeral model cache can require re-download
+on redeployment. The 600M model and ML dependencies need substantial memory/disk;
+measure cold-start behavior on Railway before relying on voice. Generated audio
+is also ephemeral; old URLs can disappear, and successful audio can accumulate
+during long uptime. Existing failed/late TTS cleanup is unchanged.
+
+See [the practical deployment checklist](docs/railway-deployment-checklist.md)
+for exact service references, FFmpeg verification and resource limitations.
+Builder reference: [Railway build configuration](https://docs.railway.com/builds/build-configuration).

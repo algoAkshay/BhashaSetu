@@ -131,6 +131,12 @@ app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 
 
+@app.get("/health")
+async def health():
+    """Process liveness only; no provider, model or database work."""
+    return {"status": "ok"}
+
+
 @app.get("/")
 def serve_ui():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
