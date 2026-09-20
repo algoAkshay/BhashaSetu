@@ -1,0 +1,41 @@
+/* Normal-user styles only. Admin pages do not load this file. */
+.user-page { margin: 0; line-height: 1.65; }
+.user-page .app { max-width: 920px; padding: 24px; }
+.user-page header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.user-page a { color: #135a86; }
+.user-page .brand { text-decoration: none; font-size: 23px; font-weight: bold; }
+.user-page .brand span { display: block; font-size: 13px; font-weight: normal; }
+.user-page .intro { margin: 32px 0 24px; }
+.user-page .eyebrow { color: #28614e; margin-bottom: 6px; }
+.user-page h1 { font-size: clamp(26px, 4.5vw, 38px); margin: 0 0 16px; line-height: 1.4; }
+.user-page h2 { font-size: 23px; margin: 0 0 16px; }
+.user-page .lead { font-size: 20px; }
+.user-page .starting-points { padding-left: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 30px; }
+.user-page .reassurance { font-weight: bold; }
+.user-page blockquote { margin: 18px 0; padding: 16px 20px; background: #e2ecef; border-left: 4px solid #387688; border-radius: 4px; }
+.user-page .language-note, .user-page .hint { color: #495c64; font-size: 15px; }
+.user-page .card { padding: 24px; }
+.user-page button { min-height: 44px; font: inherit; padding: 9px 16px; border: 1px solid #657d89; border-radius: 6px; background: white; color: #17212b; cursor: pointer; margin-bottom: 8px; }
+.user-page button:disabled { opacity: .5; cursor: default; }
+.user-page button.primary, .user-page .input-modes button[aria-pressed="true"] { background: #165c71; color: white; border-color: #165c71; }
+.user-page .input-modes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.user-page textarea { box-sizing: border-box; width: 100%; padding: 12px; font: inherit; border: 1px solid #657d89; border-radius: 6px; display: block; margin: 8px 0 12px; resize: vertical; }
+.user-page audio { width: 100%; max-width: 440px; display: block; margin: 16px 0; }
+.user-page #input-status { min-height: 1.6em; margin: 4px 0; }
+.user-page #input-status.error { color: #96291e; }
+.user-page #reply { border-top: 1px solid #d8e0e6; padding-top: 12px; }
+.user-page .assistant-summary { background: #e6f0ea; padding: 16px; border-radius: 6px; font-size: 20px; }
+.user-page .user-message { color: #495c64; overflow-wrap: anywhere; }
+.user-page summary { cursor: pointer; padding: 10px 0; font-weight: bold; }
+.user-page .result-card { border: 1px solid #d8e0e6; border-radius: 6px; padding: 16px; margin: 12px 0; overflow-wrap: anywhere; }
+.user-page .result-card h4 { font-size: 18px; margin: 0 0 8px; }
+.user-page .result-card .result-label { font-weight: bold; }
+.user-page .result-card.ELIGIBLE { border-left: 4px solid #45805d; }
+.user-page .result-card.NEED_MORE_INFORMATION { border-left: 4px solid #a78027; }
+.user-page .result-card.NOT_ELIGIBLE { border-left: 4px solid #8a7474; }
+.user-page .how-it-works { margin: 32px 0; }
+.user-page .how-it-works ol { padding-left: 24px; }
+.user-page .how-it-works li { margin: 8px 0; }
+.user-page :focus-visible { outline: 3px solid #1686b0; outline-offset: 3px; }
+.user-page [hidden] { display: none !important; }
+@media (max-width: 600px) { .user-page .app { padding: 16px; } .user-page .card { padding: 16px; } .user-page .starting-points { grid-template-columns: 1fr; } .user-page .controls { display: flex; flex-wrap: wrap; gap: 8px; } .user-page .controls button { flex: 1 1 130px; margin-right: 0; } }

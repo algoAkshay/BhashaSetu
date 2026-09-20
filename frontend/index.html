@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="hi">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>भाषा सेतु — आपके लिए सरकारी योजनाएँ</title>
+<link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/user.css"></head>
+<body class="user-page"><main class="app">
+<header><a class="brand" href="/">भाषा सेतु <span lang="en">Bhasha Setu</span></a><a href="/admin">एडमिन</a></header>
+<section class="intro"><p class="eyebrow">आपकी भाषा में, आपके लिए</p>
+<h1>सरकारी योजनाएँ ढूँढ़ना अब आसान।</h1>
+<p class="lead">सरकारी योजनाएँ ढूँढ़ने के लिए अपने बारे में सामान्य भाषा में बताएँ।</p>
+<p>शुरुआत में बस ये बताने की कोशिश करें:</p>
+<ul class="starting-points"><li>आपकी उम्र</li><li>आपका राज्य / केंद्र शासित प्रदेश</li><li>आप विद्यार्थी, किसान, नौकरीपेशा, स्वरोज़गार या बेरोज़गार हैं</li><li>अगर पता हो तो परिवार की सालाना आय</li></ul>
+<p class="reassurance">सारी जानकारी एक साथ देने की ज़रूरत नहीं है। ज़रूरत पड़ने पर हम एक-एक करके सवाल पूछेंगे।</p>
+<blockquote>“मैं 24 साल का छात्र हूँ, उत्तर प्रदेश से हूँ और मेरे परिवार की सालाना आय 2 लाख रुपये है।”</blockquote>
+<p class="language-note">हिंदी, Hinglish या English में बोलें या लिखें।</p></section>
+<section class="card conversation" aria-labelledby="conversation-title"><h2 id="conversation-title">चलिए, शुरू करें</h2>
+<div class="input-modes" role="group" aria-label="बोलें या लिखें"><button id="voice-mode" aria-pressed="true">बोलकर बताएँ</button><button id="type-mode" aria-pressed="false">लिखकर बताएँ</button></div>
+<div id="voice-input"><p id="voice-help">माइक शुरू करें, अपनी बात कहें, फिर रोककर भेजें।</p>
+<div class="controls"><button id="start" class="primary">माइक शुरू करें</button><button id="stop" disabled>रिकॉर्डिंग रोकें</button><button id="submit" disabled>रिकॉर्डिंग भेजें</button></div>
+<audio id="userAudio" controls hidden aria-label="अपनी रिकॉर्डिंग सुनें"></audio></div>
+<form id="text-form" hidden><label for="typed-message">अपनी बात लिखें</label><textarea id="typed-message" rows="3" maxlength="4000" placeholder="मैं 24 साल का छात्र हूँ…" required></textarea><button id="send-text" class="primary" type="submit">भेजें</button></form>
+<p id="input-status" role="status" aria-live="polite"></p>
+<section id="reply" hidden aria-label="बातचीत"><p class="user-message"><strong>आप:</strong> <span id="userText"></span></p><div id="aiText" aria-live="polite"></div>
+<p id="question-context" class="hint"></p><button id="skip" hidden>अभी नहीं बताना / पता नहीं</button>
+<audio id="aiAudio" controls hidden aria-label="जवाब सुनें"></audio></section>
+</section>
+<details id="results" class="card" hidden><summary id="results-summary">योजनाएँ और कारण देखें</summary><p>ये परिणाम आपकी दी गई जानकारी पर आधारित हैं। आप ऊपर अपनी जानकारी जोड़ या सुधार सकते हैं।</p><div id="result-list"></div></details>
+<section class="how-it-works" aria-labelledby="how-title"><h2 id="how-title">यह कैसे काम करता है?</h2><ol><li>अपनी जानकारी सामान्य भाषा में बताएँ</li><li>हम जानकारी समझकर संभावित योजनाएँ ढूँढ़ेंगे</li><li>ज़रूरत होने पर केवल ज़रूरी सवाल पूछेंगे</li><li>आपको योजनाएँ कारण के साथ दिखाई जाएँगी</li></ol></section>
+</main><script src="/static/script.js" defer></script></body></html>

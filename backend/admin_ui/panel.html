@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scheme admin · Bhasha Setu</title><link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/admin.css"></head>
+<body><main class="app admin"><header><h1>Bhasha Setu admin</h1><nav><a href="/">Voice assistant</a><button id="logout">Sign out</button></nav></header>
+<p id="message" role="status" aria-live="polite"></p>
+<section id="catalogue"><h2>Schemes</h2><form id="filters" class="card grid">
+<label>Search by name<input name="search" type="search" maxlength="200"></label>
+<label>Government level<select name="government_level"><option value="">All levels</option><option value="CENTRAL">Central</option><option value="STATE">State</option></select></label>
+<label>State / UT<select name="state_or_ut"><option value="">All states / UTs</option></select></label>
+<label>Confidence<select name="status_confidence"><option value="">All confidence values</option><option>VERIFIED</option><option>LIKELY_ACTIVE</option><option>NEEDS_REVIEW</option></select></label>
+<label>Normalized category<select name="category"><option value="">All categories</option></select></label>
+<label>Active status<select name="is_active"><option value="true">Active</option><option value="false">Archived</option><option value="">All schemes</option></select></label>
+<div><button type="submit">Apply filters</button><button type="reset">Reset</button></div></form>
+<p id="count"></p><div class="table-scroll"><table><thead><tr><th>Name</th><th>Level</th><th>State / UT</th><th>Category</th><th>Confidence</th><th>Status</th></tr></thead><tbody id="scheme-rows"></tbody></table></div>
+<div class="pagination"><button id="previous">Previous</button><span id="page-label"></span><button id="next">Next</button></div></section>
+<section id="detail" hidden><a href="#">← Scheme list</a><header><h2 id="scheme-title"></h2><button id="toggle-active"></button></header>
+<p id="scheme-status"></p><div id="source-links"></div><form id="metadata" class="card"><h3>Scheme metadata</h3><div id="metadata-fields" class="grid"></div><button type="submit">Save metadata</button></form>
+<section class="card"><h3>Unresolved / complex eligibility</h3><p>These conditions still require manual review. Metadata and rule edits do not automatically resolve them.</p><ul id="manual-conditions"></ul></section>
+<section class="card"><h3>Structured eligibility rules</h3><p>Only explicitly saved rule edits change structured eligibility. Deleting a rule removes that eligibility restriction.</p>
+<div class="table-scroll"><table><thead><tr><th>Field</th><th>Operator</th><th>Value</th><th>Confidence</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="rule-rows"></tbody></table></div>
+<form id="rule-form"><h4 id="rule-heading">Add rule</h4><div class="grid">
+<label>Field<select id="rule-field"></select></label><label>Operator<select id="rule-operator"></select></label>
+<label>Value (JSON)<textarea id="rule-value" required aria-describedby="rule-help"></textarea></label>
+<label>Confidence<input id="rule-confidence" maxlength="50"></label><label>Notes<textarea id="rule-notes" maxlength="20000"></textarea></label></div>
+<p id="rule-help">Use a number (18), quoted text ("female"), a boolean (true), or a nonempty JSON list for IN / NOT_IN (["female", "male"]).</p>
+<p id="rule-type"></p><button type="submit">Save rule</button><button id="cancel-rule" type="button">Cancel edit / clear</button></form></section></section>
+</main><script src="/static/admin.js" defer></script></body></html>
