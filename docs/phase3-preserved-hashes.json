@@ -1,0 +1,70 @@
+﻿[
+    {
+        "File":  "backend/services/asr_service.py",
+        "SHA256":  "9A5EBAB1E4FCA30869CB35C34AED7D9C83C0F2923FCCA72AD52CF3DA9803969C"
+    },
+    {
+        "File":  "backend/services/profile_extraction_service.py",
+        "SHA256":  "0DFC7D3914860C46DB3D2141CD0BC10CE2B89796B89D4DF488D763E404E7B96B"
+    },
+    {
+        "File":  "backend/profile_schemas.py",
+        "SHA256":  "0F272CC2760941F7651D931ED788E008DF499D6C3E552DEEA593B76C38A06113"
+    },
+    {
+        "File":  "backend/services/eligibility_service.py",
+        "SHA256":  "00F09F70688E9389235E3BBFFB8E4462F17891857536FEB859749229FB8FA6FA"
+    },
+    {
+        "File":  "backend/models.py",
+        "SHA256":  "9892BBF0E4B26D3F4470C181421B56A885DCCA64670C859C1E65178B3BA6BEB9"
+    },
+    {
+        "File":  "backend/schemas.py",
+        "SHA256":  "FDD6D20D326324A1812D114A7F1C3D9A240D9C03E5A71448B90B9072BBEBE92A"
+    },
+    {
+        "File":  "backend/rules.py",
+        "SHA256":  "9D22B1828D9ECC4954731F2CD735FD9F6638546FBB49E96DE5D4D75490C26584"
+    },
+    {
+        "File":  "backend/normalization.py",
+        "SHA256":  "6BCB370E45D6D0BBBBF1A11E9C99BC20C3C86EA0297E3DBAE7430EC004E43612"
+    },
+    {
+        "File":  "backend/repositories/scheme_repository.py",
+        "SHA256":  "9C7ECBC31D9C4BD475B491273D4087C92B3C4B80F8BF55DDF2F8B83A774FC888"
+    },
+    {
+        "File":  "backend/repositories/rule_repository.py",
+        "SHA256":  "BB9BA101AB20BDC459FB0E6E920216502E8D801FF3067EBB1B85AD7530EBB37E"
+    },
+    {
+        "File":  "backend/db/seed.py",
+        "SHA256":  "78688D37A46756B47071935202B9A49C33522DEDAFC4E316D8DBAFDA89D14760"
+    },
+    {
+        "File":  "migrations/versions/0001_schemes_and_rules.py",
+        "SHA256":  "5A95C362DE8672D7BDC7E5BE2C9A04F67946615D62E1F37168576352609288E9"
+    },
+    {
+        "File":  "database/schemes.csv",
+        "SHA256":  "F1562BFFC27E835BF822BF40640342ED3044BA7A89005323602B0BB742AE1FB7"
+    },
+    {
+        "File":  "frontend/script.js",
+        "SHA256":  "629721DFA97365E8D69978390D5AC147D6B8A13EBE7670FC36077253B78B052E"
+    },
+    {
+        "File":  "frontend/index.html",
+        "SHA256":  "B990913EF59F5B916D29A3713A93B5C6C1BA634DDC1690F44C6984EB757A012C"
+    },
+    {
+        "File":  "frontend/style.css",
+        "SHA256":  "C519F769D35B9DE4C7053AC1820E5D3DB8752553CB67A3C7C483102FB4865CC5"
+    },
+    {
+        "File":  "backend/tts.py",
+        "SHA256":  "E5247C15757C4A96F018D43F9A8C7182B963DE8DBE36DE96B412751BE5DE59EF"
+    }
+]

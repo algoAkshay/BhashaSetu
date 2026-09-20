@@ -1,0 +1,74 @@
+{
+  "clean": {
+    "first": {
+      "schemes_before": 0,
+      "schemes_after": 297,
+      "active_schemes_after": 297,
+      "central": 79,
+      "state": 218,
+      "structured_rules": 610,
+      "active_rules_after": 610,
+      "all_stored_rules": 610,
+      "created": 297,
+      "updated": 0,
+      "unchanged": 0,
+      "rules_created": 610,
+      "legacy_archived": 0
+    },
+    "second": {
+      "schemes_before": 297,
+      "schemes_after": 297,
+      "active_schemes_after": 297,
+      "central": 79,
+      "state": 218,
+      "structured_rules": 610,
+      "active_rules_after": 610,
+      "all_stored_rules": 610,
+      "created": 0,
+      "updated": 0,
+      "unchanged": 297,
+      "rules_created": 0,
+      "legacy_archived": 0
+    }
+  },
+  "legacy_upgrade": {
+    "first": {
+      "schemes_before": 67,
+      "schemes_after": 364,
+      "active_schemes_after": 297,
+      "central": 79,
+      "state": 218,
+      "structured_rules": 610,
+      "active_rules_after": 610,
+      "all_stored_rules": 827,
+      "created": 297,
+      "updated": 0,
+      "unchanged": 0,
+      "rules_created": 610,
+      "legacy_archived": 67
+    },
+    "second": {
+      "schemes_before": 364,
+      "schemes_after": 364,
+      "active_schemes_after": 297,
+      "central": 79,
+      "state": 218,
+      "structured_rules": 610,
+      "active_rules_after": 610,
+      "all_stored_rules": 827,
+      "created": 0,
+      "updated": 0,
+      "unchanged": 297,
+      "rules_created": 0,
+      "legacy_archived": 0
+    }
+  },
+  "source_sha256": {
+    "database\\central_eligibility_rules.csv": "63e41ce590ec05915c6a212bc65897874a5429eb1946f393a7dda8a311f4355f",
+    "database\\central_needs_review.csv": "0187b642b57e64d7d440f04e2358c94b3dbe78a3d51d3c2c631101c18a0564cf",
+    "database\\central_schemes_master.csv": "b333ae9987942351adbec92ab3cd25beb106845aa75bdbd0b7523958ccb24767",
+    "database\\state_eligibility_rules.csv": "941a467640a217e87d780927059fd2898ffd803a6b71dc84e340bda1a7cdf70b",
+    "database\\state_needs_review.csv": "578989806f3e6dfcc79fd47873ed96c7d71143c8c9f07f0ed9e3f086dbd91ac1",
+    "database\\state_schemes_master.csv": "7c381108c2307eb2eb17171103f2c9945d36d62dd95565987c47f5a51719d7ca"
+  }
+}

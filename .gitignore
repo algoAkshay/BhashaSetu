@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Audio outputs
+audio/*.mp3
+
+# Temp files
+temp/
+*.wav
+
+# OS
+.DS_Store
+.env
+.env.*
+!.env.example
+.venv/
+.test-deps/
+.pytest_cache/
+*.db
+
+# Local model caches and recordings (never commit credentials or user audio).
+.cache/
+model_cache/
+models_cache/
+.huggingface/
+hf_cache/
+*.safetensors
+*.onnx
+*.pt
+*.pth
+*.ckpt
+*.mp3
+*.webm
+*.ogg
+*.m4a
