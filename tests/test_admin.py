@@ -10,7 +10,7 @@ from backend.server import app
 from backend.services.admin_auth import COOKIE
 from backend.services.scheme_service import SchemeService
 from backend.services.session_store import InMemorySessionStore
-from tests.support import test_database as make_database
+from tests.support import create_test_database as make_database
 
 
 class AdminTests(unittest.TestCase):

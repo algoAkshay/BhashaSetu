@@ -2,7 +2,7 @@ import unittest
 
 from backend.db.seed import seed_database
 from backend.services.eligibility_service import EligibilityService
-from tests.support import test_database
+from tests.support import create_test_database
 
 from backend.logic import (
     extract_fields,
@@ -16,7 +16,7 @@ from backend.logic import (
 class LogicTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine, cls.factory = test_database()
+        cls.engine, cls.factory = create_test_database()
         seed_database(cls.factory)
 
     @classmethod

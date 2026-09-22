@@ -18,13 +18,13 @@ from backend.repositories.rule_repository import RuleRepository
 from backend.repositories.scheme_repository import SchemeRepository
 from backend.services.eligibility_service import EligibilityService
 from backend.services.scheme_service import SchemeService
-from tests.support import ROOT, migrate, test_database
+from tests.support import ROOT, migrate, create_test_database
 from tests.test_rules import rule
 
 
 class DatabaseTests(unittest.TestCase):
     def setUp(self):
-        self.engine, self.factory = test_database()
+        self.engine, self.factory = create_test_database()
         self.addCleanup(self.engine.dispose)
 
     def test_seed_and_reseed_counts_and_metadata(self):
@@ -176,7 +176,7 @@ class DatabaseTests(unittest.TestCase):
 class RegressionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine, cls.factory = test_database()
+        cls.engine, cls.factory = create_test_database()
         seed_database(cls.factory)
         with DEFAULT_CSV.open(encoding="utf-8", newline="") as stream:
             cls.rows = list(csv.DictReader(stream))

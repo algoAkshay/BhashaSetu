@@ -17,7 +17,7 @@ from backend.services.profile_extraction_service import GeminiProfileExtractor, 
 from backend.services.scheme_service import SchemeService
 from backend.services.session_store import InMemorySessionStore, RedisSessionStore
 from backend.services.user_response import QUESTIONS, next_question, present_results
-from tests.support import test_database as make_database
+from tests.support import create_test_database as make_database, source_digest
 
 
 def update(**values):
@@ -239,5 +239,5 @@ def test_full_catalogue_counts_unchanged_by_conversation():
 def test_protected_admin_data_engine_and_migrations_unchanged():
     root = Path(__file__).resolve().parents[1]
     baseline = json.loads((root / "docs/user-ux-preserved-hashes.json").read_text(encoding="utf-8-sig"))
-    for filename, expected in baseline.items():
-        assert hashlib.sha256((root / filename).read_bytes()).hexdigest().upper() == expected, filename
+    for filename, expected in sorted(baseline["files"].items()):
+        assert source_digest(root, filename) == expected, filename

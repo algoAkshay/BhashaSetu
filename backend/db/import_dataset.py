@@ -274,15 +274,22 @@ def load_dataset(directory: Path = DEFAULT_DIRECTORY):
     return entries, report
 
 
-def import_dataset(factory, directory: Path = DEFAULT_DIRECTORY) -> dict:
+def import_dataset(factory, directory: Path = DEFAULT_DIRECTORY, *, overwrite_existing=False) -> dict:
     entries, report = load_dataset(directory)
-    report.update(created=0, updated=0, unchanged=0, legacy_archived=0, rules_created=0)
+    report.update(created=0, updated=0, unchanged=0, legacy_archived=0, rules_created=0,
+                  skipped_updates=0, conflicts=[])
     with factory.begin() as session:
         report["schemes_before"] = session.scalar(select(func.count()).select_from(Scheme))
-        # Preserve IDs/history, but prototypes never remain active alongside curated data.
+        # Archive prototypes on first migration only. Later activation may be an admin edit.
+        has_curated = session.scalar(select(Scheme.id).where(Scheme.source_key.startswith("curated:")).limit(1)) is not None
         legacy = session.scalars(select(Scheme).where(Scheme.source_key.startswith("schemes.csv:"))).all()
         for scheme in legacy:
             if scheme.is_active:
+                if has_curated and not overwrite_existing:
+                    report["skipped_updates"] += 1
+                    report["conflicts"].append({"scheme_id": scheme.id, "source_key": scheme.source_key,
+                                                "reason": "active_legacy_record_preserved"})
+                    continue
                 scheme.is_active = False
                 report["legacy_archived"] += 1
         for key, entry in entries.items():
@@ -291,6 +298,20 @@ def import_dataset(factory, directory: Path = DEFAULT_DIRECTORY) -> dict:
             metadata = {**entry.metadata, "manual_conditions": entry.manual,
                         "source_metadata": {"master": entry.master, "reviews": entry.reviews,
                                             "unresolved_rules": entry.unresolved_rules}}
+            if scheme is not None:
+                stored_rules = list(session.scalars(select(EligibilityRule).where(EligibilityRule.scheme_id == scheme.id)))
+                def rule_record(rule):
+                    return {name: getattr(rule, name) for name in ("field", "operator", "value", "value_type", "source_metadata")}
+                desired_rules = [{**definition.model_dump(), "source_metadata": raw} for definition, raw in entry.rules]
+                canonical = lambda rows: sorted(json.dumps(row, sort_keys=True) for row in rows)
+                changed_fields = sorted(name for name, value in metadata.items() if getattr(scheme, name) != value)
+                rules_differ = canonical(map(rule_record, stored_rules)) != canonical(desired_rules)
+                if (changed_fields or rules_differ) and not overwrite_existing:
+                    report["skipped_updates"] += 1
+                    report["conflicts"].append({"scheme_id": scheme.id, "source_key": source,
+                        "reason": "stored_record_differs_from_source", "fields": changed_fields,
+                        "rules_differ": rules_differ})
+                    continue
             if scheme is None:
                 scheme = Scheme(source_key=source, **metadata)
                 session.add(scheme)
@@ -331,6 +352,8 @@ def main():
     parser.add_argument("--directory", type=Path, default=DEFAULT_DIRECTORY)
     parser.add_argument("--audit-only", action="store_true")
     parser.add_argument("--report", type=Path)
+    parser.add_argument("--overwrite-existing", action="store_true",
+                        help="Explicitly replace conflicting stored metadata/rules, including admin edits; review and back up first")
     args = parser.parse_args()
     factory = None
     try:
@@ -338,7 +361,7 @@ def main():
             _, report = load_dataset(args.directory)
         else:
             factory = create_session_factory()
-            report = import_dataset(factory, args.directory)
+            report = import_dataset(factory, args.directory, overwrite_existing=args.overwrite_existing)
         output = json.dumps(report, ensure_ascii=False, indent=2)
         if args.report:
             args.report.write_text(output + "\n", encoding="utf-8")

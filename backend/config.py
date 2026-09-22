@@ -12,6 +12,36 @@ class ConfigurationError(RuntimeError):
     pass
 
 
+def positive_integer(name, default):
+    try:
+        value = int(os.getenv(name, str(default)))
+        if value <= 0:
+            raise ValueError
+        return value
+    except ValueError:
+        raise ConfigurationError(f"{name} must be a positive integer.") from None
+
+
+@dataclass(frozen=True)
+class ProtectionSettings:
+    max_audio_upload_bytes: int = 8 * 1024 * 1024
+    max_audio_duration_seconds: int = 60
+    conversation_requests_per_minute: int = 30
+    speech_requests_per_minute: int = 8
+    audio_cleanup_ttl_seconds: int = 3600
+    admin_login_attempts: int = 5
+    admin_login_cooldown_seconds: int = 300
+
+    @classmethod
+    def from_environment(cls):
+        return cls(**{name: positive_integer(name.upper(), item.default)
+                      for name, item in cls.__dataclass_fields__.items()})
+
+
+def ffmpeg_override():
+    return os.getenv("FFMPEG_BINARY", "").strip()
+
+
 def database_url() -> URL:
     value = os.environ.get("DATABASE_URL")
     if not value:
@@ -35,12 +65,15 @@ class ASRSettings:
     language: str = "hi"
     decoder: str = "ctc"
     log_transcripts: bool = False
+    revision: str = ""
 
     def __post_init__(self):
         if self.provider not in {"indicconformer", "whisper"}:
             raise ConfigurationError("ASR_PROVIDER must be indicconformer or whisper.")
         if not self.model_id.strip():
             raise ConfigurationError("ASR_MODEL_ID must not be empty.")
+        if self.revision and not re.fullmatch(r"[0-9a-fA-F]{40}", self.revision):
+            raise ConfigurationError("ASR_MODEL_REVISION must be an immutable 40-character commit hash.")
         if self.language != "hi":
             raise ConfigurationError("This Hindi ASR integration requires ASR_LANGUAGE=hi.")
         if self.decoder != "ctc":
@@ -58,6 +91,7 @@ class ASRSettings:
             language=os.getenv("ASR_LANGUAGE", "hi").strip(),
             decoder=os.getenv("ASR_DECODER", "ctc").strip().lower(),
             log_transcripts=logging_value == "true",
+            revision=os.getenv("ASR_MODEL_REVISION", "").strip(),
         )
 
 

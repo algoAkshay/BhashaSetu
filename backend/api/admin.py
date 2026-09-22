@@ -5,6 +5,7 @@ from typing import Literal, get_args
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from backend.admin_schemas import AdminRuleInput, Confidence, SchemePage, SchemePatch
 from backend.api.routes import database_session
@@ -42,7 +43,10 @@ async def login(request: Request):
         supplied = payload.get("password") if isinstance(payload, dict) else None
     except ValueError:
         supplied = None
-    if not isinstance(supplied, str) or not secrets.compare_digest(supplied.encode(), password.encode()):
+    valid = isinstance(supplied, str) and secrets.compare_digest(supplied.encode(), password.encode())
+    client = request.client.host if request.client else "unknown"
+    await run_in_threadpool(request.app.state.login_throttle.attempt, client, valid)
+    if not valid:
         # Never echo the submitted password in a Pydantic validation response.
         raise HTTPException(401, "Incorrect admin password.")
     response = JSONResponse({"ok": True}, headers=PRIVATE)

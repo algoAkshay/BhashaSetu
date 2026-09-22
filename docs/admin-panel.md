@@ -108,12 +108,10 @@ existing session dependency rolls back unsuccessful requests when closing.
 
 ## Dataset refresh policy
 
-The existing importer is unchanged and remains source-authoritative. Rerunning
-it can overwrite admin metadata/confidence/notes, restore deleted rules, replace
-edited or added rules, reactivate imported schemes and archive legacy records
-again. Back up or capture intended edits before an intentional source refresh;
-do not run import as a routine app startup action after admin edits. No automatic
-merge or override system has been introduced.
+The importer now skips and reports conflicting existing metadata/rules by default,
+protecting admin edits. Review the report before using the explicit
+`python -m backend.db.import_dataset --overwrite-existing` option; that option
+can replace admin changes. Identical re-imports remain idempotent.
 
 ## Verification
 

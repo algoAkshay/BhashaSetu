@@ -15,12 +15,12 @@ from backend.server import app
 from backend.services.asr_service import ASRService, ASRUnavailableError, AudioDecodeError, get_asr_service
 from backend.services.profile_extraction_service import ProfileExtractor, ProfileExtractionError, get_profile_extractor
 from backend.services.session_store import InMemorySessionStore, get_session_store, SessionStoreError
-from tests.support import test_database
+from tests.support import create_test_database
 
 
 class ApiTests(unittest.TestCase):
     def setUp(self):
-        self.engine, self.factory = test_database()
+        self.engine, self.factory = create_test_database()
         seed_database(self.factory)
         app.state.session_factory = self.factory
         self.asr = Mock(spec=ASRService)
@@ -125,7 +125,8 @@ class ApiTests(unittest.TestCase):
         self.assertTrue(second["eligibility_results"])
         self.assertEqual(second["audio_url"], "/audio/mock.mp3")
         self.assertEqual(set(second), {"user_text", "ai_text", "audio_url", "schemes", "session",
-                                      "eligibility_results", "missing_fields", "next_question", "result_cards", "skipped_fields"})
+                                      "eligibility_results", "missing_fields", "next_question", "result_cards", "skipped_fields",
+                                      "potential_schemes"})
         self.assertEqual(third["session"]["attempts"], 3)
         self.assertTrue(all(not Path(path).exists() for path in paths))
 
@@ -401,7 +402,7 @@ class ConfigurationTests(unittest.TestCase):
                     self.fail("Startup should not succeed")
 
     def test_startup_detects_missing_rule_table_in_empty_database(self):
-        engine, factory = test_database()
+        engine, factory = create_test_database()
         self.addCleanup(engine.dispose)
         with engine.begin() as connection:
             EligibilityRule.__table__.drop(connection)

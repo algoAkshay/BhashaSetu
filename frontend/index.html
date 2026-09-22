@@ -20,6 +20,8 @@
 <audio id="userAudio" controls hidden aria-label="अपनी रिकॉर्डिंग सुनें"></audio></div>
 <form id="text-form" hidden><label for="typed-message">अपनी बात लिखें</label><textarea id="typed-message" rows="3" maxlength="4000" placeholder="मैं 24 साल का छात्र हूँ…" required></textarea><button id="send-text" class="primary" type="submit">भेजें</button></form>
 <p id="input-status" role="status" aria-live="polite"></p>
+<p class="hint">बातचीत के लिए आपकी जानकारी कुछ समय तक रखी जाती है और निष्क्रिय रहने पर सत्र अपने आप समाप्त हो जाता है। आप नीचे के बटन से इस सत्र की जानकारी मिटा सकते हैं। आपकी बात समझने के लिए लिखे हुए या आवाज़ से बने पाठ को चुने गए AI प्रदाता को भेजा जा सकता है। यह बटन प्रदाता के पास भेजे गए पाठ या बनी हुई ऑडियो को नहीं मिटाता।</p>
+<button id="delete-session" type="button">मेरे सत्र की जानकारी मिटाएँ</button>
 <section id="reply" hidden aria-label="बातचीत"><p class="user-message"><strong>आप:</strong> <span id="userText"></span></p><div id="aiText" aria-live="polite"></div>
 <p id="question-context" class="hint"></p><button id="skip" hidden>अभी नहीं बताना / पता नहीं</button>
 <audio id="aiAudio" controls hidden aria-label="जवाब सुनें"></audio></section>

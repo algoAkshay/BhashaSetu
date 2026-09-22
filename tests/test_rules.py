@@ -93,6 +93,71 @@ class RuleTests(unittest.TestCase):
         with self.assertRaises(InputValidationError):
             evaluate_rule(rule(), {"income": 200000})
 
+    def test_state_alias_up_matches_uttar_pradesh(self):
+        definition = rule(
+            "state_or_ut",
+            "==",
+            "Uttar Pradesh",
+            "string",
+        )
+        result = evaluate_rule(
+            definition,
+            {"state_or_ut": "UP"},
+        )
+        self.assertTrue(result.passed)
+
+    def test_state_alias_orissa_matches_odisha(self):
+        definition = rule(
+            "state_or_ut",
+            "==",
+            "Odisha",
+            "string",
+        )
+        result = evaluate_rule(
+            definition,
+            {"state_or_ut": "Orissa"},
+        )
+        self.assertTrue(result.passed)
+
+    def test_social_category_long_form_matches_sc(self):
+        definition = rule(
+            "social_category",
+            "==",
+            "SC",
+            "string",
+        )
+        result = evaluate_rule(
+            definition,
+            {"social_category": "Scheduled Caste"},
+        )
+        self.assertTrue(result.passed)
+
+    def test_soft_education_mismatch_is_not_conclusive_failure(self):
+        definition = rule(
+            "education_level",
+            "==",
+            "Undergraduate",
+            "string",
+        )
+        result = evaluate_rule(
+            definition,
+            {"education_level": "Graduate"},
+        )
+        self.assertIsNone(result.passed)
+
+    def test_soft_occupation_mismatch_is_not_conclusive_failure(self):
+        definition = rule(
+            "occupation",
+            "==",
+            "Small and marginal farmer",
+            "string",
+        )
+        result = evaluate_rule(
+            definition,
+            {"occupation": "Farmer"},
+        )
+        self.assertIsNone(result.passed)
+
 
 class SchemeEvaluationTests(unittest.TestCase):
     def setUp(self):
@@ -152,3 +217,37 @@ class SchemeEvaluationTests(unittest.TestCase):
         result = self.evaluate({"age": 40, "annual_income": 100000})
         self.assertEqual(result.status, "NOT_ELIGIBLE")
         self.assertEqual(result.reason, "inactive_scheme")
+
+    def test_manual_conditions_produce_potentially_eligible(self):
+        self.scheme.manual_conditions = [
+            "Original certificate must be verified"
+        ]
+
+        result = self.evaluate({
+            "age": 25,
+            "annual_income": 100000,
+        })
+
+        self.assertEqual(
+            result.status,
+            "POTENTIALLY_ELIGIBLE",
+        )
+        self.assertEqual(
+            result.reason,
+            "manual_review_required",
+        )
+
+    def test_manual_condition_does_not_hide_known_failure(self):
+        self.scheme.manual_conditions = [
+            "Original certificate must be verified"
+        ]
+
+        result = self.evaluate({
+            "age": 61,
+            "annual_income": 100000,
+        })
+
+        self.assertEqual(
+            result.status,
+            "NOT_ELIGIBLE",
+        )

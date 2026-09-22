@@ -23,7 +23,7 @@ from backend.profile_schemas import ProfileExtractionResult
 from backend.services.asr_service import get_asr_service
 from backend.services.profile_extraction_service import get_profile_extractor
 from backend.services.session_store import InMemorySessionStore
-from tests.support import test_database
+from tests.support import create_test_database
 
 
 def main():
@@ -66,7 +66,7 @@ def main():
         raise requests.exceptions.Timeout("injected transport failure")
 
     args_mode = args.mode
-    engine, factory = test_database()
+    engine, factory = create_test_database()
     seed_database(factory)
     store = InMemorySessionStore()
     server.app.state.session_factory = factory

@@ -15,7 +15,7 @@ current native builder (the successor to Nixpacks); no Dockerfile is needed here
 - [ ] Confirm startup: `python -m uvicorn backend.server:app --host 0.0.0.0 --port "$PORT" --workers 1`. The build file wraps this in `sh -c` for variable expansion. Railway provides PORT. Leave any dashboard start override empty or use the same command.
 - [ ] Deploy and generate an HTTPS domain. Configure the Railway healthcheck path as `/health`.
 - [ ] GET `/health` returns HTTP 200 and `{"status":"ok"}`. This is process liveness only, not provider/Redis/model readiness. Existing app startup still checks the migrated database.
-- [ ] For a **new empty database only**, deliberately run `python -m backend.db.seed` inside the deployed app environment (Railway SSH). Do not re-import an existing edited catalogue: the importer can replace admin changes.
+- [ ] For a **new empty database only**, deliberately run `python -m backend.db.seed` inside the deployed app environment (Railway SSH). Normal re-import skips/reports conflicting records. Use --overwrite-existing only after reviewing conflicts and backing up; it can replace admin changes.
 - [ ] Confirm runtime `ffmpeg -version`. The build sets `FFMPEG_BINARY=/usr/bin/ffmpeg`.
 - [ ] Submit a text turn, answer an intermediate question and reach a final result. Confirm profile facts persist over turns.
 - [ ] Confirm audio playback when available and readable results when `audio_url` is null. Automated bounded-TTS regression coverage already exists; do not alter production credentials to simulate failure.
@@ -41,7 +41,7 @@ does not prove that voice model access, memory or cold-start latency is adequate
 Generated audio stays in the existing application-local `audio/` directory;
 uploads use temporary files. Treat both as ephemeral, and expect old audio URLs
 to stop working after a replacement. Existing failed/late TTS cleanup is preserved;
-successful audio has no periodic cleanup and can accumulate during long uptime.
+completed generated MP3s expire under AUDIO_CLEANUP_TTL_SECONDS (default one hour).
 One replica avoids cross-instance audio lookup failures. No shared storage or
 new retention subsystem is added. Uvicorn and existing logging use stdout/stderr;
 no local log file is required.

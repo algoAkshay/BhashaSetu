@@ -8,7 +8,7 @@ from backend.normalization import FIELD_TYPES, NONNEGATIVE_FIELDS, normalize_att
 
 Operator = Literal["==", "!=", ">", ">=", "<", "<=", "IN", "NOT_IN"]
 ValueType = Literal["integer", "decimal", "string", "boolean"]
-Status = Literal["ELIGIBLE", "NOT_ELIGIBLE", "NEED_MORE_INFORMATION"]
+Status = Literal["ELIGIBLE", "POTENTIALLY_ELIGIBLE", "NOT_ELIGIBLE", "NEED_MORE_INFORMATION"]
 
 
 class RuleDefinition(BaseModel):

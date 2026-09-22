@@ -1,3 +1,4 @@
+import secrets
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
@@ -139,9 +140,10 @@ class ASRServiceTests(unittest.TestCase):
         # Real tensor library, mocked loader: never download model assets in tests.
         model = Mock(return_value="मेरी उम्र पैंसठ साल है।")
         with patch("transformers.AutoModel.from_pretrained", return_value=model) as load:
-            recognize = _load_indicconformer(ASRSettings())
+            revision = secrets.token_hex(20)  # Synthetic, mocked provider only.
+            recognize = _load_indicconformer(ASRSettings(revision=revision))
         self.assertEqual(recognize(self.waveform), "मेरी उम्र पैंसठ साल है।")
-        load.assert_called_once_with(INDICCONFORMER_MODEL, trust_remote_code=True)
+        load.assert_called_once_with(INDICCONFORMER_MODEL, revision=revision, trust_remote_code=True)
         tensor, language, decoder = model.call_args.args
         self.assertEqual(tuple(tensor.shape), (1, 1600))
         self.assertEqual(str(tensor.dtype), "torch.float32")
@@ -230,7 +232,8 @@ class UploadCleanupTests(unittest.TestCase):
 
         with patch("backend.server.tempfile.NamedTemporaryFile", side_effect=tracked_file):
             with self.assertRaises(OSError):
-                asyncio.run(speech_to_text(upload, "cleanup-test", Mock(), Mock()))
+                asyncio.run(speech_to_text(request=Mock(), file=upload, session_id="cleanup-test",
+                                           session=Mock(), asr=Mock(), extractor=Mock(), store=Mock()))
         upload.close.assert_awaited_once()
         self.assertTrue(paths)
         self.assertTrue(all(not Path(path).exists() for path in paths))

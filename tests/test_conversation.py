@@ -9,7 +9,7 @@ from backend.services.conversation_service import process_turn
 from backend.services.eligibility_service import EligibilityService
 from backend.services.profile_extraction_service import ProfileExtractor, ProfileExtractionError
 from backend.services.session_store import InMemorySessionStore
-from tests.support import test_database as create_test_database
+from tests.support import create_test_database as create_test_database
 
 
 @pytest.fixture

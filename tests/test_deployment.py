@@ -10,7 +10,7 @@ from backend.server import app
 from backend.services.asr_service import get_asr_service
 from backend.services.profile_extraction_service import get_profile_extractor
 from backend.services.session_store import InMemorySessionStore
-from tests.support import test_database as create_database
+from tests.support import create_test_database as create_database
 
 
 def test_startup_health_and_static_without_provider_work():

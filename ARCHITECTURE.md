@@ -1,3 +1,5 @@
+> Historical architecture document. See README.md for the current implementation and known contract failures.
+
 ﻿# Bhasha Setu architecture
 
 Browser → IndicConformer → Gemini structured facts → Pydantic → Redis profile → EligibilityService → PostgreSQL rules → explainable Hindi response/gTTS.

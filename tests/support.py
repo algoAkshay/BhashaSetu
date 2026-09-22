@@ -1,4 +1,5 @@
 from pathlib import Path
+import hashlib
 
 from alembic import command
 from alembic.config import Config
@@ -9,13 +10,19 @@ from sqlalchemy.pool import StaticPool
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def source_digest(root, filename):
+    """Ignore checkout newline/path conventions, preserving every other byte."""
+    path = Path(root) / Path(filename.replace("\\", "/"))
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest().upper()
+
+
 def migrate(connection, revision="head"):
     config = Config(str(ROOT / "alembic.ini"))
     config.attributes["connection"] = connection
     command.upgrade(config, revision)
 
 
-def test_database():
+def create_test_database():
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
 
     @event.listens_for(engine, "connect")

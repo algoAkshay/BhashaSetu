@@ -1,139 +1,154 @@
-﻿# Bhasha Setu
+# Bhasha Setu
 
-A deterministic, data-driven government-scheme eligibility assistant using curated scheme metadata and structured rules, with explicit handling for missing or complex eligibility conditions.
+A Hindi-first voice/text assistant for finding government schemes using explicit profile facts and deterministic rules. It is a student project, not an official determination of eligibility or an application-submission service.
 
-The supplied CSVs contain **297 schemes: 79 Central and 218 State**. Import produces **610 scalar rules** and preserves **65 rule rows for manual review**. All 297 schemes have additional conditions requiring confirmation. Passing scalar checks alone therefore does not certify eligibility. Source VERIFIED labels are preserved metadata, not independent legal verification.
+## Current reliability status
 
-## Current flow
+The repository is **not yet ready to freeze as a passing reference implementation**. The existing engine emits `POTENTIALLY_ELIGIBLE`, but `backend/schemas.py` currently excludes it from the response status type. That mismatch breaks some evaluations; an existing API test also predates the `potential_schemes` response field. This maintenance pass preserves eligibility behavior and reports these failures rather than hiding them. See [maintenance notes](docs/repository-reliability.md).
 
-Browser recording → FastAPI → IndicConformer → Gemini structured extraction → Pydantic validation → Redis temporary profile/slot filling → EligibilityService → PostgreSQL deterministic rules → checks, missing fields and manual conditions → Hindi response/gTTS.
+## Request flow
 
-The normal-user page now offers both Hindi-first voice and typed conversation.
-Typing uses `/conversation` and joins the same extraction/session/eligibility flow
-after the speech-transcription step. Follow-ups ask one relevant question at a time,
-with optional skipping; results show plain-language reasons and scheme-specific
-manual conditions. The admin panel and shared styles remain unchanged. See
-[user UX improvement report](docs/user-ux-improvement-report.md) for behavior,
-API additions, validation and limitations.
+Typed text goes to `POST /conversation`. Recorded audio goes to `POST /speech-to-text`, where FFmpeg normalizes it and the existing IndicConformer model transcribes Hindi. Both paths then share:
 
-Gemini only extracts explicit applicant facts. Redis stores temporary profiles; PostgreSQL stores durable schemes and rules. ASR, audio normalization, browser recording and gTTS are preserved.
+```text
+Text -> Gemini profile extraction -> validated explicit updates
+     -> Redis temporary profile -> PostgreSQL schemes/rules
+     -> deterministic evaluation -> progressive question and result cards
+     -> optional bounded Hindi gTTS -> browser
+```
 
-## Upgrade an existing installation
+Gemini extracts structured facts; it does not independently decide scheme eligibility. Later explicit corrections replace earlier facts; absent facts do not erase answers. The browser asks one relevant question at a time, supports skipping and displays scheme-specific manual conditions. Text requests never initialize ASR.
 
-Use the Python environment where ASR already works. Keep existing database, Gemini and Hugging Face configuration; do not reinstall ASR.
+## Eligibility results
 
-```powershell
-python -m pip install redis==8.1.0
-python -m pip check
-# Keep DATABASE_URL and GEMINI_API_KEY securely configured.
-$env:SESSION_BACKEND = 'redis'
-$env:REDIS_URL = 'redis://localhost:6379/0'
-$env:SESSION_TTL_SECONDS = '1800'
-$env:REDIS_KEY_PREFIX = 'bhashasetu:session'
+Rules combine typed field/operator/value checks using AND. Supported operators are `==`, `!=`, `>`, `>=`, `<`, `<=`, `IN`, `NOT_IN`. The engine's current branches are:
 
-# Offline audit; no database or network needed:
-python -m backend.db.import_dataset --audit-only --report docs/dataset-audit.json
+| Status | Meaning |
+| --- | --- |
+| `ELIGIBLE` | Structured checks pass with no unresolved conditions |
+| `POTENTIALLY_ELIGIBLE` | Structured checks pass, but scheme-specific manual conditions remain |
+| `NEED_MORE_INFORMATION` | Required facts or rules are missing |
+| `NOT_ELIGIBLE` | A known rule fails; missing facts do not hide that failure |
+
+The status/schema mismatch noted above remains unresolved. Confidence labels such as VERIFIED describe researched source metadata, not guaranteed approval. Explanations and narration come from existing evaluation results, not independent AI eligibility reasoning.
+
+## REST API and administration
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Plain HTML/CSS/JavaScript frontend |
+| `GET /health` | Process liveness only |
+| `POST /conversation` | Typed conversation with session/question context |
+| `POST /speech-to-text` | Multipart audio and session/context |
+| `DELETE /session/{session_id}` | Delete that temporary session |
+| `GET /api/schemes`, `GET /api/schemes/{id}` | Catalogue and details |
+| `POST /api/eligibility` | Deterministic evaluation of supplied attributes |
+| `/admin`, `/admin/login`, `/api/admin/*` | Protected metadata, source and rule management |
+| `GET /docs` | FastAPI API documentation |
+
+Admin uses a single environment password, a signed HttpOnly/SameSite cookie, CSRF checks and failed-login throttling. Redis shares cooldowns in the normal configuration; explicit in-memory development mode keeps local counters. Successful login resets failures. This is lightweight protection, not enterprise authentication. Deactivation is soft; there is no default scheme hard-delete workflow.
+
+## PostgreSQL, Redis and privacy
+
+PostgreSQL stores durable Scheme/EligibilityRule data through SQLAlchemy and Alembic migrations. Redis stores temporary profile fields, attempt/finalization metadata and a default 1,800-second sliding TTL. It does not serialize whole conversation turns. No automatic memory fallback is used.
+
+The frontend uses cryptographic session IDs and provides an explicit delete-session action. Successful deletion clears the UI and starts a new ID. Extraction text can be sent to the configured Gemini provider; deletion of the local session does not erase provider-held data or generated audio.
+
+## Speech and audio
+
+The default STT provider is `ai4bharat/indic-conformer-600m-multilingual`, Hindi CTC, loaded lazily once per process. This project integrates an existing model; it did not train it. The remote-code loader requires a reviewed immutable `ASR_MODEL_REVISION`. No usable revision is invented or bundled. Text remains usable without loading the voice model. Whisper is an explicit rollback option.
+
+Uploads are read in bounded chunks, with byte/duration limits, FFmpeg timeout and temporary-file cleanup. TTS uses a separate two-worker pool, per-network timeouts and a four-second audio wait budget. Failure returns null audio without discarding text. Final narration summarizes up to three existing results. Completed generated MP3s expire after a configurable TTL; in-progress files are excluded. Storage is ephemeral unless the operator configures otherwise.
+
+## Dataset coverage
+
+Repository CSVs contain **79 Central schemes and 218 currently curated State schemes covering 11 states/UTs**, for 297 unique researched schemes. This is not complete India-wide state coverage.
+
+Represented jurisdictions: Bihar, Chhattisgarh, Goa, Gujarat, Jharkhand, Madhya Pradesh, Maharashtra, Odisha, Rajasthan, Uttar Pradesh and West Bengal. The count is computed from unique `state_or_ut` values in `database/state_schemes_master.csv`; the state eligibility/review files use the same field and do not add jurisdictions.
+
+The researched source contains 675 eligibility rows: 610 structured rules and 65 preserved for review. All 297 entries have additional manual conditions. These are repository counts, not a live production database audit.
+
+### Safe re-import
+
+`python -m backend.db.import_dataset --audit-only` validates source files without database writes.
+
+A normal import creates missing schemes and leaves identical records unchanged. If existing metadata, activation or rules differ, it **skips the entire conflicting scheme** and reports `skipped_updates` and `conflicts`, including changed field names and whether rules differ. This deliberately treats source changes and stored/admin edits conservatively; it does not guess which should win. One conflicting scheme does not prevent importing other new records.
+
+To deliberately replace conflicting records after reviewing the report and backing up the target database:
+
+```sh
+python -m backend.db.import_dataset --overwrite-existing
+```
+
+That flag can overwrite admin changes, reactivate curated schemes and reconcile/delete stored rules absent from CSV. It is never automatic. Initial legacy migration archives prototype records; later active legacy records are preserved/reported unless overwrite is explicit. Source CSV facts are not modified by the importer.
+
+## Local setup
+
+Supported/tested runtime: **Python 3.12** (`.python-version`, Railpack and CI agree). Python 3.10/3.11 compatibility is not claimed. Runtime and test direct dependencies are pinned to versions observed in the existing working environment. Transitive dependencies are not fully locked, and a fresh Linux build still needs CI validation.
+
+```sh
+git clone https://github.com/algoAkshay/BhashaSetu.git
+cd BhashaSetu
+python -m venv .venv
+```
+
+Activate `.venv` using `source .venv/bin/activate` on POSIX, or `.\.venv\Scripts\Activate.ps1` in PowerShell.
+
+```sh
+python -m pip install -r requirements-dev.txt
+```
+
+Provision a new local PostgreSQL database and Redis. Copy `.env.example` to a private `.env` and configure the process environment: the app does **not** automatically load this file. Use your IDE environment settings or shell variables. Never commit credentials.
+
+With DATABASE_URL pointing to the intended development database:
+
+```sh
 python -m alembic upgrade head
-python -m backend.db.import_dataset
-# A repeat must create no additional records:
-python -m backend.db.import_dataset
-python -m uvicorn backend.server:app --reload
+python -m backend.db.import_dataset --audit-only
+# Explicit initialization of a new development catalogue:
+python -m backend.db.seed
+python -m uvicorn backend.server:app --host 127.0.0.1 --port 8000
 ```
 
-`python -m backend.db.seed` now imports the researched dataset by default. `--csv database/schemes.csv` explicitly selects the legacy importer and is not part of normal deployment. The legacy Python seed function remains for regression fixtures.
+Open localhost:8000. Do not seed on every startup. Startup checks database tables but does not initialize ASR or prove Redis/provider readiness. For voice, obtain Hugging Face model access, supply authentication and set a reviewed revision.
 
-On a clean database the result is 297 schemes and 610 rules. Upgrading the old catalogue retains its 67 schemes and 217 rules as **inactive archives**: 364 stored schemes/827 stored rules, but only **297 schemes/610 rules are active**. No prototype scheme remains active alongside the curated catalogue.
+## Configuration
 
-For a new installation, use Python 3.10+, PostgreSQL and a reachable Redis server. Create a virtual environment, install requirements-dev.txt (requirements.txt for runtime), securely configure DATABASE_URL/GEMINI_API_KEY and existing ASR access, then run migration/import. `.env.example` is a template, **not automatically loaded**. Open http://127.0.0.1:8000; API docs are at /docs.
+See `.env.example` for defaults and placeholders; no real credentials belong there.
 
-## Scheme admin panel
+| Variables | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Required PostgreSQL connection |
+| `GEMINI_API_KEY`, `LLM_PROVIDER`, `LLM_MODEL`, `LLM_TIMEOUT_MS` | Profile extraction; confirm access to configured model |
+| `SESSION_BACKEND`, `REDIS_URL`, `SESSION_TTL_SECONDS`, `REDIS_KEY_PREFIX` | Redis sessions; explicit memory mode for local development |
+| `ASR_PROVIDER`, `ASR_MODEL_ID`, `ASR_MODEL_REVISION`, `ASR_LANGUAGE`, `ASR_DECODER` | Speech provider/model and immutable revision |
+| `HF_TOKEN`, `HF_HOME`, `FFMPEG_BINARY` | Library model authentication/cache and optional FFmpeg override |
+| `ASR_LOG_TRANSCRIPTS` | Off by default; keep off for privacy |
+| `MAX_AUDIO_UPLOAD_BYTES`, `MAX_AUDIO_DURATION_SECONDS` | Upload/decode limits |
+| `CONVERSATION_REQUESTS_PER_MINUTE`, `SPEECH_REQUESTS_PER_MINUTE` | Process-local request limits |
+| `AUDIO_CLEANUP_TTL_SECONDS` | Completed MP3 retention, default 3600 seconds |
+| `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `ADMIN_COOKIE_SECURE` | Enable admin; independent random signing secret, Secure cookies on HTTPS |
+| `ADMIN_LOGIN_ATTEMPTS`, `ADMIN_LOGIN_COOLDOWN_SECONDS` | Failed-login threshold/cooldown |
+| `TEST_DATABASE_URL`, `TEST_REDIS_URL` | Optional disposable integration services only |
 
-Open `/admin` to manage existing PostgreSQL schemes. Set `ADMIN_PASSWORD` and
-`ADMIN_SESSION_SECRET` securely in the server process environment first; the
-signing secret must be randomly generated and at least 32 characters long.
-Set `ADMIN_COOKIE_SECURE=true` when serving over HTTPS. No new dependencies or
-database migrations are needed. Existing database configuration remains required.
+## Tests and CI
 
-The panel provides name search, Central/State, state/UT, confidence, normalized
-category and active/archive filters, pagination, scheme details, metadata/source
-editing, activation/deactivation and validated eligibility-rule CRUD. Deactivation
-keeps scheme data and rules; there is no scheme deletion endpoint. Source links
-are clickable but the server never fetches them. Confidence and manual review
-conditions are never automatically resolved by editing metadata or rules.
-
-This is lightweight administrative protection for a demo/student project, not
-enterprise authentication. One environment password starts an eight-hour signed
-HttpOnly, SameSite=Strict session. Admin pages and APIs are protected; writes
-also require a CSRF token. Sign out clears the browser cookie. See
-[admin setup, operations and verification](docs/admin-panel.md).
-
-**Reimport behavior:** the existing dataset importer remains source-authoritative.
-Running it again can overwrite admin metadata, replace edited/added/deleted rules,
-reactivate curated schemes and rearchive legacy schemes. Do not use reimport as a
-routine startup step after making admin edits; back up changes before an intentional
-dataset refresh.
-
-## Dataset policy
-
-The importer reads only the six supplied Central/State master, eligibility-rules and needs-review CSVs. It validates required headers, identities, dates and rules; normalizes empty cells and booleans; preserves original metadata/URLs/confidence; deduplicates; and writes one transaction. State identity includes jurisdiction. Repeated imports reconcile importer-owned rules and metadata. Source removals/renames are not automatically deleted; review/archive them explicitly.
-
-Malformed individual rows are reported while valid rows remain usable. Missing headers/unreadable files abort before writes. Unsupported rules and master conditions not fully represented by scalar rules remain visible manual conditions. Raw categories are retained beside an 18-category display taxonomy; categories never affect eligibility. No websites were fetched or facts invented.
-
-Family annual income and personal monthly income remain separate from personal annual income. Six State income rules map to family_annual_income using their supplied FAMILY/FAMILY_ANNUAL metadata and annual-income rule labels. Three ambiguous self/spouse/family scopes stay manual. There is no assumed income-period conversion.
-
-See [integration report](docs/scheme-dataset-integration-report.md), [audit](docs/dataset-audit.json), and [two-run import evidence](docs/dataset-import-verification.json).
-
-## Applicant extraction
-
-Retain LLM_PROVIDER=gemini, LLM_MODEL=gemini-3.5-flash-lite, securely supplied GEMINI_API_KEY and LLM_TIMEOUT_MS=30000. The existing official google-genai adapter remains.
-
-The profile supports age, gender, state/UT, personal annual income, family annual income, personal monthly income, social category, occupation, employment, student/education/farmer status, disability/percentage, BPL, rural/urban residence, widow/minority/marital status. Rare scheme-specific conditions remain manual.
-
-Sensitive attributes require explicit applicant statements. Names, surnames, location, language, occupation or gender cannot establish caste/category, disability, minority or widow status. Unknowns remain null; explicit false remains false; corrections replace only explicit values. Age is an integer 0–120; money fields are nonnegative integer rupees; disability percentage is 0–100. Gender remains Male/Female; rural/urban is Rural/Urban. The original three extraction keys remain required; new nullable fields may be omitted by older clients/mocks and default to unknown. Schema validity is not proof of semantic accuracy.
-
-Missing credentials, invalid output and provider failures preserve profile values and return a Hindi retry. Normal tests never contact Gemini. The live smoke command remains:
-
-```powershell
-python scripts/test_profile_extraction.py 'मैं पच्चीस साल का लड़का हूं और मेरी वार्षिक आय पाँच हजार है' --eligibility
-```
-
-Verify extracted 25/Male/5000. The researched catalogue also requires additional facts/manual checks; old prototype eligibility counts no longer apply. --expected accepts exact expected JSON; --current-profile supplies known context.
-
-## Redis sessions
-
-Keys use bhashasetu:session:{session_id}. Hashes contain non-null profile fields plus _attempts and _finalized for API compatibility, never audio/history/prompts/results/scheme copies. IDs accept 1–128 letters, digits, underscore or hyphen. The omitted-ID default remains default; callers should always send distinct IDs.
-
-HSET updates only explicit fields. Null never erases; false is stored explicitly. HSET, attempt increment, expiry and snapshot retrieval share a transaction. Different-field updates preserve each other; same-field corrections use last Redis write wins. Completion metadata uses an optimistic WATCH guard, not a distributed lock, and never controls eligibility.
-
-The sliding TTL defaults to 1,800 seconds. Existing-key reads, merges and touch refresh it. Missing/expired reads return empty profiles without creating immortal keys. Startup never clears Redis. State survives Python restarts until expiry; Redis server restart durability depends on Redis persistence settings. Extraction failures leave values/counters unchanged but the successful initial read refreshes TTL.
-
-One synchronous client/pool is reused per app lifespan and closed at shutdown. Conversation runs in the existing thread pool. Redis failure/corrupt values return sanitized 503; invalid IDs return 422. There is no fallback. SESSION_BACKEND=memory explicitly selects local test/dev storage with matching TTL semantics, without cross-process persistence. rediss:// supports TLS; never commit Redis credentials. See [Phase 3 report](docs/phase3-report.md).
-
-## ASR and audio
-
-Keep ASR_PROVIDER=indicconformer, ASR_MODEL_ID=ai4bharat/indic-conformer-600m-multilingual, ASR_LANGUAGE=hi, ASR_DECODER=ctc and ASR_LOG_TRANSCRIPTS=false. Retain cached Hugging Face login or securely supplied HF_TOKEN. The official AutoModel/Hindi CTC and FFmpeg mono 16 kHz path are unchanged. FFMPEG_BINARY is optional; otherwise imageio-ffmpeg supplies it. Do not co-install CPU/GPU ONNX Runtime packages.
-
-`python scripts/test_asr.py test.mp3` remains an explicit live check. Whisper is an explicit rollback via ASR_PROVIDER=whisper and ASR_MODEL_ID=base, never automatic. gTTS failure retains text with null audio_url. Historical setup details are in [ASR report](docs/asr-report.md).
-
-## API and explainability
-
-Existing routes /, /speech-to-text, /api/schemes, /api/schemes/{id} and /api/eligibility remain. Speech keeps multipart file/session_id, all response keys, and session.income. Additional known profile fields appear without replacing old keys.
-
-Scheme responses add researched metadata/provenance. Eligibility preserves checks/missing_fields and adds manual_conditions plus manual_review_required reason. A known failed scalar rule gives NOT_ELIGIBLE. Otherwise missing data, absent rules or mandatory manual conditions give NEED_MORE_INFORMATION. ELIGIBLE requires all checks passing and no unresolved conditions. Wrong-state checks remain explainable; archived schemes are excluded. The frontend is unchanged; detailed conditions are available in API JSON and speech mentions manual confirmation.
-
-## Verification and limits
-
-```powershell
+```sh
+python -m pytest tests/test_import_safety.py tests/test_integrity_portability.py -q
 python -m pytest -q
-python -m compileall -q backend tests migrations scripts
-python -m pip check
-# Only after securely configuring disposable integration URLs:
-python -m pytest tests/test_postgresql.py tests/test_redis_integration.py -q
 ```
 
-Ordinary tests use actual migrations on isolated SQLite databases, Redis command mocks/injected memory, and mocked Gemini/ASR/TTS. TEST_DATABASE_URL and TEST_REDIS_URL gate live integrations. Tests own temporary schemas/prefixes and never flush Redis.
+Normal tests use isolated migrated SQLite databases and mocked Gemini/ASR/TTS. Optional PostgreSQL/Redis tests use dedicated temporary schemas/keys. Never point test URLs at production. Node runs the small frontend privacy test; symlink coverage may skip on Windows without symlink permission.
 
-The user reports prior live verification in their working environment. This run lacks integration URLs, so new migration/profile changes are verified offline only. Sessions remain temporary and unauthenticated; overlapping whole turns are not serialized. No perfect language understanding, qualification hierarchy, legal correctness, exhaustive scheme coverage or production reliability is claimed. Admin, scraping, RAG, vectors and distributed locks remain out of scope.
+GitHub Actions installs Python 3.12 and pinned dependencies, starts disposable PostgreSQL/Redis services and runs pytest. Test fixtures apply their own migrations; no global reseed is required. HF/Transformers are offline; no Gemini key, model download or paid API is required. The workflow follows [GitHub's Python testing guidance](https://docs.github.com/en/actions/tutorials/build-and-test-code/python). CI is expected to expose the unresolved failures above, not hide them.
+
+Integrity snapshots normalize CRLF to LF and use sorted POSIX paths. Other bytes remain significant. Legacy stage hash files are historical records, not silently regenerated baselines.
+
+## Legacy paths and limitations
+
+`backend/logic.py` remains a test/compatibility layer, not the production conversation path. `backend/agent/*` and `backend/tts.py` are unused legacy paths and retained as historical code; active TTS is in `backend/server.py`. See maintenance notes for classification. No Java/Spring source was found; no conversion was started.
+
+Catalogue correctness/freshness, manual conditions, extraction/transcription errors and external-service availability limit results. There are no measured accuracy/scaling claims. Model cold start and memory must be tested on the deployment host. The current failing eligibility contracts prevent treating this backend as a frozen passing reference.
 
 ## Railway Deployment
 
@@ -154,8 +169,7 @@ ASR loads on the first voice request, not startup. `HF_HOME` is set to
 `/tmp/bhashasetu-huggingface`; the ephemeral model cache can require re-download
 on redeployment. The 600M model and ML dependencies need substantial memory/disk;
 measure cold-start behavior on Railway before relying on voice. Generated audio
-is also ephemeral; old URLs can disappear, and successful audio can accumulate
-during long uptime. Existing failed/late TTS cleanup is unchanged.
+is also ephemeral; old URLs can disappear, and completed generated audio expires under AUDIO_CLEANUP_TTL_SECONDS. Failed/late TTS cleanup remains in place.
 
 See [the practical deployment checklist](docs/railway-deployment-checklist.md)
 for exact service references, FFmpeg verification and resource limitations.
